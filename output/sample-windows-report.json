@@ -1,0 +1,320 @@
+{
+  "reportMetadata": {
+    "hostname": "WEB-PROD-03",
+    "generatedAt": "2026-06-30T07:00:14Z",
+    "windowStart": "2026-06-29T07:00:00Z",
+    "windowEnd": "2026-06-30T07:00:00Z",
+    "overallStatus": "CRITICAL",
+    "totalEvents": 23,
+    "critCount": 5,
+    "warnCount": 9,
+    "scriptVersion": "1.0.0",
+    "configVersion": "1.0.0"
+  },
+  "systemInfo": {
+    "Hostname": "WEB-PROD-03",
+    "OSVersion": "Microsoft Windows Server 2022 Standard",
+    "OSBuild": "20348",
+    "LastBootTime": "2026-06-15T03:12:44Z",
+    "Uptime": "15.16:48:22.4000000",
+    "Domain": "corp.internal",
+    "DomainRole": "Member Server"
+  },
+  "categories": {
+    "Authentication": {
+      "totalEvents": 9,
+      "critCount": 2,
+      "warnCount": 4,
+      "infoCount": 3,
+      "moduleErrors": [],
+      "events": [
+        {
+          "TimeCreated": "2026-06-29T08:14:02Z",
+          "EventId": 4625,
+          "Severity": "INFO",
+          "Account": "jsmith",
+          "SourceIP": "local",
+          "SourceHost": "WORKSTATION-14",
+          "LogonType": 2,
+          "LogonTypeName": "Interactive",
+          "FailureReason": "Incorrect password",
+          "Description": "Logon failure (Interactive) for 'jsmith' from local — Incorrect password"
+        },
+        {
+          "TimeCreated": "2026-06-29T14:41:17Z",
+          "EventId": 4625,
+          "Severity": "WARN",
+          "Account": "svc-backup",
+          "SourceIP": "10.0.4.22",
+          "SourceHost": "unknown",
+          "LogonType": 10,
+          "LogonTypeName": "RemoteInteractive",
+          "FailureReason": "Incorrect password",
+          "Description": "Logon failure (RemoteInteractive) for 'svc-backup' from 10.0.4.22 — Incorrect password"
+        },
+        {
+          "TimeCreated": "2026-06-29T14:41:19Z",
+          "EventId": 4625,
+          "Severity": "WARN",
+          "Account": "svc-backup",
+          "SourceIP": "10.0.4.22",
+          "SourceHost": "unknown",
+          "LogonType": 10,
+          "LogonTypeName": "RemoteInteractive",
+          "FailureReason": "Incorrect password",
+          "Description": "Logon failure (RemoteInteractive) for 'svc-backup' from 10.0.4.22 — Incorrect password"
+        },
+        {
+          "TimeCreated": "2026-06-29T14:41:23Z",
+          "EventId": 4625,
+          "Severity": "WARN",
+          "Account": "svc-backup",
+          "SourceIP": "10.0.4.22",
+          "SourceHost": "unknown",
+          "LogonType": 10,
+          "LogonTypeName": "RemoteInteractive",
+          "FailureReason": "Incorrect password",
+          "Description": "Logon failure (RemoteInteractive) for 'svc-backup' from 10.0.4.22 — Incorrect password"
+        },
+        {
+          "TimeCreated": "2026-06-29T14:41:31Z",
+          "EventId": 4625,
+          "Severity": "WARN",
+          "Account": "svc-backup",
+          "SourceIP": "10.0.4.22",
+          "SourceHost": "unknown",
+          "LogonType": 10,
+          "LogonTypeName": "RemoteInteractive",
+          "FailureReason": "Incorrect password",
+          "Description": "Logon failure (RemoteInteractive) for 'svc-backup' from 10.0.4.22 — Incorrect password"
+        },
+        {
+          "TimeCreated": "2026-06-29T14:41:45Z",
+          "EventId": 4625,
+          "Severity": "WARN",
+          "Account": "svc-backup",
+          "SourceIP": "10.0.4.22",
+          "SourceHost": "unknown",
+          "LogonType": 10,
+          "LogonTypeName": "RemoteInteractive",
+          "FailureReason": "Incorrect password",
+          "Description": "Logon failure (RemoteInteractive) for 'svc-backup' from 10.0.4.22 — Incorrect password"
+        },
+        {
+          "TimeCreated": "2026-06-29T14:42:01Z",
+          "EventId": 4740,
+          "Severity": "CRIT",
+          "Account": "svc-backup",
+          "SourceIP": "N/A",
+          "SourceHost": "WEB-PROD-03",
+          "LogonType": 0,
+          "LogonTypeName": "N/A",
+          "FailureReason": "Account locked out",
+          "Description": "Account 'svc-backup' was locked out. Lockout observed on: WEB-PROD-03"
+        },
+        {
+          "TimeCreated": "2026-06-29T23:48:09Z",
+          "EventId": 4624,
+          "Severity": "CRIT",
+          "Account": "mreyes",
+          "SourceIP": "203.0.113.44",
+          "SourceHost": "N/A",
+          "LogonType": 10,
+          "LogonTypeName": "RemoteInteractive",
+          "FailureReason": "After-hours logon",
+          "Description": "After-hours RemoteInteractive logon for 'mreyes' from 203.0.113.44 — PRECEDED BY FAILURES IN THIS WINDOW"
+        },
+        {
+          "TimeCreated": "2026-06-30T02:10:33Z",
+          "EventId": 4624,
+          "Severity": "INFO",
+          "Account": "admin",
+          "SourceIP": "10.0.4.5",
+          "SourceHost": "N/A",
+          "LogonType": 10,
+          "LogonTypeName": "RemoteInteractive",
+          "FailureReason": "After-hours logon",
+          "Description": "After-hours RemoteInteractive logon for 'admin' from 10.0.4.5"
+        }
+      ]
+    },
+    "Services": {
+      "totalEvents": 4,
+      "critCount": 1,
+      "warnCount": 2,
+      "infoCount": 1,
+      "moduleErrors": [],
+      "events": [
+        {
+          "TimeCreated": "2026-06-29T09:02:11Z",
+          "EventId": 7000,
+          "Severity": "WARN",
+          "ServiceName": "W32Time",
+          "DisplayName": "W32Time",
+          "State": "Failed to Start",
+          "IsSecurityRelevant": false,
+          "Description": "Service 'W32Time' failed to start: The service did not respond to the start or control request in a timely fashion."
+        },
+        {
+          "TimeCreated": "2026-06-29T12:15:48Z",
+          "EventId": 7034,
+          "Severity": "WARN",
+          "ServiceName": "PrintNotify",
+          "DisplayName": "PrintNotify",
+          "State": "Terminated Unexpectedly",
+          "IsSecurityRelevant": false,
+          "Description": "Service 'PrintNotify' terminated unexpectedly"
+        },
+        {
+          "TimeCreated": "2026-06-29T18:33:02Z",
+          "EventId": 7034,
+          "Severity": "CRIT",
+          "ServiceName": "WinDefend",
+          "DisplayName": "WinDefend",
+          "State": "Terminated Unexpectedly",
+          "IsSecurityRelevant": true,
+          "Description": "Service 'WinDefend' terminated unexpectedly — SECURITY-RELEVANT SERVICE"
+        },
+        {
+          "TimeCreated": "2026-06-29T19:01:00Z",
+          "EventId": 1001,
+          "Severity": "INFO",
+          "ServiceName": "MsMpEng",
+          "DisplayName": "MsMpEng",
+          "State": "Crash Dump Collected",
+          "IsSecurityRelevant": true,
+          "Description": "Crash dump collected for 'MsMpEng'. Dump path: C:\\ProgramData\\Microsoft\\Windows\\WER\\ReportQueue\\AppCrash_MsMpEng.exe"
+        }
+      ]
+    },
+    "Privilege": {
+      "totalEvents": 5,
+      "critCount": 1,
+      "warnCount": 3,
+      "infoCount": 1,
+      "moduleErrors": [],
+      "events": [
+        {
+          "TimeCreated": "2026-06-29T08:00:14Z",
+          "EventId": 4672,
+          "Severity": "INFO",
+          "SubjectAccount": "CORP\\admin",
+          "TargetAccount": "N/A",
+          "TargetGroup": "N/A",
+          "Privileges": "SeBackupPrivilege, SeRestorePrivilege, SeDebugPrivilege (+ 4 more)",
+          "Description": "Privileged logon: 'CORP\\admin' assigned sensitive privileges: SeBackupPrivilege, SeRestorePrivilege, SeDebugPrivilege (+ 4 more)"
+        },
+        {
+          "TimeCreated": "2026-06-29T16:22:09Z",
+          "EventId": 4672,
+          "Severity": "WARN",
+          "SubjectAccount": "CORP\\mreyes",
+          "TargetAccount": "N/A",
+          "TargetGroup": "N/A",
+          "Privileges": "SeBackupPrivilege, SeChangeNotifyPrivilege",
+          "Description": "Privileged logon: 'CORP\\mreyes' assigned sensitive privileges: SeBackupPrivilege, SeChangeNotifyPrivilege — ACCOUNT NOT IN EXPECTED ADMIN LIST"
+        },
+        {
+          "TimeCreated": "2026-06-29T23:50:01Z",
+          "EventId": 4673,
+          "Severity": "CRIT",
+          "SubjectAccount": "CORP\\mreyes",
+          "TargetAccount": "N/A",
+          "TargetGroup": "N/A",
+          "Privileges": "SeDebugPrivilege",
+          "Description": "HIGH-RISK PRIVILEGE USE: 'CORP\\mreyes' exercised SeDebugPrivilege via process 'powershell.exe' (full path: C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe)"
+        },
+        {
+          "TimeCreated": "2026-06-30T00:05:44Z",
+          "EventId": 4732,
+          "Severity": "WARN",
+          "SubjectAccount": "CORP\\admin",
+          "TargetAccount": "mreyes",
+          "TargetGroup": "WEB-PROD-03\\Remote Desktop Users",
+          "Privileges": "N/A",
+          "Description": "'mreyes' added to local security group 'WEB-PROD-03\\Remote Desktop Users' by 'CORP\\admin' — CRITICAL GROUP"
+        },
+        {
+          "TimeCreated": "2026-06-30T01:12:18Z",
+          "EventId": 4699,
+          "Severity": "WARN",
+          "SubjectAccount": "CORP\\admin",
+          "TargetAccount": "N/A",
+          "TargetGroup": "N/A",
+          "Privileges": "N/A",
+          "Description": "Scheduled task '\\Microsoft\\Windows\\PLA\\BackgroundCollector' deleted by 'CORP\\admin'"
+        }
+      ]
+    },
+    "SystemHealth": {
+      "totalEvents": 2,
+      "critCount": 1,
+      "warnCount": 1,
+      "infoCount": 0,
+      "moduleErrors": [],
+      "events": [
+        {
+          "TimeCreated": "2026-06-29T11:47:00Z",
+          "EventId": 153,
+          "Severity": "WARN",
+          "Source": "disk",
+          "Component": "Storage",
+          "Description": "The IO operation at logical block address 0x4a2f1 for Disk 1 was retried."
+        },
+        {
+          "TimeCreated": "2026-06-29T22:30:55Z",
+          "EventId": 6008,
+          "Severity": "CRIT",
+          "Source": "EventLog",
+          "Component": "System",
+          "Description": "The previous system shutdown was unexpected. This indicates a crash, power loss, or forced power-off. Investigate hardware health and review events immediately preceding this entry."
+        }
+      ]
+    },
+    "ScheduledTasks": {
+      "totalEvents": 3,
+      "critCount": 0,
+      "warnCount": 2,
+      "infoCount": 1,
+      "moduleErrors": [],
+      "events": [
+        {
+          "TimeCreated": "2026-06-29T10:15:00Z",
+          "EventId": 4698,
+          "Severity": "INFO",
+          "TaskName": "\\Maintenance\\NightlyCleanup",
+          "SubjectAccount": "CORP\\admin",
+          "Action": "Created",
+          "TaskCommand": "C:\\Scripts\\nightly-cleanup.ps1",
+          "IsTrustedPath": true,
+          "Description": "Scheduled task '\\Maintenance\\NightlyCleanup' created by 'CORP\\admin'"
+        },
+        {
+          "TimeCreated": "2026-06-29T23:51:40Z",
+          "EventId": 4698,
+          "Severity": "WARN",
+          "TaskName": "\\Microsoft\\Windows\\UpdateOrchestrator\\TempTask9214",
+          "SubjectAccount": "CORP\\mreyes",
+          "Action": "Created",
+          "TaskCommand": "C:\\Users\\mreyes\\AppData\\Local\\Temp\\svc.exe",
+          "IsTrustedPath": false,
+          "Description": "Scheduled task '\\Microsoft\\Windows\\UpdateOrchestrator\\TempTask9214' created by 'CORP\\mreyes' — created by non-administrative account — executable path NOT in trusted locations: C:\\Users\\mreyes\\AppData\\Local\\Temp\\svc.exe"
+        },
+        {
+          "TimeCreated": "2026-06-30T01:12:18Z",
+          "EventId": 4699,
+          "Severity": "WARN",
+          "TaskName": "\\Microsoft\\Windows\\PLA\\BackgroundCollector",
+          "SubjectAccount": "CORP\\admin",
+          "Action": "Deleted",
+          "TaskCommand": "N/A",
+          "IsTrustedPath": true,
+          "Description": "Scheduled task '\\Microsoft\\Windows\\PLA\\BackgroundCollector' deleted by 'CORP\\admin'"
+        }
+      ]
+    }
+  },
+  "executionNotes": [
+    "[WARN] [Orchestrator] Security event log maximum size (153600 KB) is below the recommended minimum (204800 KB). Events may be overwritten before the next scheduled report run. Increase log size via wevtutil or Event Viewer properties."
+  ]
+}
