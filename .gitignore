@@ -1,0 +1,125 @@
+# =============================================================================
+# ops-log-monitor - .gitignore
+# =============================================================================
+# Purpose: Prevent generated reports, credentials, OS artifacts, and editor
+# temporary files from being committed to the repository.
+#
+# Rule: If a file is generated at runtime or is specific to a local
+# environment, it does not belong in version control.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# Generated report output
+# -----------------------------------------------------------------------------
+# Scripts write reports to an output directory at runtime.
+# Sample reports in output/ are committed intentionally as static files.
+# All other generated reports must be excluded.
+
+output/reports/
+*.report.md
+*.report.json
+
+
+# -----------------------------------------------------------------------------
+# Script execution logs
+# -----------------------------------------------------------------------------
+# The monitor scripts write their own execution logs for troubleshooting.
+# These are local operational artifacts, not project files.
+
+logs/
+*.log
+*.log.bak
+
+
+# -----------------------------------------------------------------------------
+# Configuration overrides
+# -----------------------------------------------------------------------------
+# Administrators may create local overrides of the config files containing
+# site-specific paths, credentials, or thresholds. These must never be
+# committed because they may contain sensitive environment details.
+#
+# Local override naming convention:
+#   windows-monitor.conf.local.ps1
+#   linux-monitor.conf.local
+
+*.conf.local
+*.conf.local.ps1
+
+
+# -----------------------------------------------------------------------------
+# Windows artifacts
+# -----------------------------------------------------------------------------
+
+# PowerShell module cache
+*.psd1.bak
+
+# Windows thumbnail cache
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Windows shortcut files
+*.lnk
+
+
+# -----------------------------------------------------------------------------
+# Linux artifacts
+# -----------------------------------------------------------------------------
+
+# Backup files created by editors
+*~
+*.bak
+*.swp
+*.swo
+
+# Compiled Python (if any tooling is added later)
+__pycache__/
+*.pyc
+*.pyo
+
+
+# -----------------------------------------------------------------------------
+# Editor and IDE artifacts
+# -----------------------------------------------------------------------------
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Vim session files
+Session.vim
+
+# Emacs
+\#*\#
+.\#*
+
+
+# -----------------------------------------------------------------------------
+# Operating system artifacts
+# -----------------------------------------------------------------------------
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+.directory
+
+
+# -----------------------------------------------------------------------------
+# Temporary and working files
+# -----------------------------------------------------------------------------
+
+*.tmp
+*.temp
+*.orig
+*.rej
