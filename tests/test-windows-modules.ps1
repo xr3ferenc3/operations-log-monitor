@@ -33,6 +33,9 @@
 #     cd ops-log-monitor
 #     .\tests\test-windows-modules.ps1
 #
+# REQUIRES:
+#   PowerShell 5.1+ (compatible — no PowerShell 7+ syntax used)
+#
 # EXIT CODES:
 #   0 = All tests passed
 #   1 = One or more tests failed
@@ -50,6 +53,7 @@ $ConfigDir  = Join-Path $RepoRoot "windows\config"
 # Using a purpose-built mini-framework rather than Pester keeps the test
 # suite runnable without any module installation on the target system,
 # consistent with the project's no-external-dependencies requirement.
+# All syntax is PowerShell 5.1 compatible — no ?. or ?? operators.
 # =============================================================================
 
 $script:TestsPassed = 0
@@ -100,9 +104,22 @@ function Assert-PropertyExists {
 function Assert-TypeMatch {
     param([string]$TestName, $Value, [type]$ExpectedType)
     $matches = ($null -ne $Value) -and ($Value -is $ExpectedType)
+
+    # PowerShell 5.1 compatible null-safe type name retrieval.
+    # The ?. null-conditional and ?? null-coalescing operators require
+    # PowerShell 7+ and must not be used here since the project targets
+    # PowerShell 5.1 which ships with Windows Server 2022. Using them
+    # in a string interpolation context causes "You cannot call a method
+    # on a null-valued expression" when $Value is null under PS 5.1.
+    if ($null -eq $Value) {
+        $actualTypeName = "null"
+    } else {
+        $actualTypeName = $Value.GetType().Name
+    }
+
     Assert-True -TestName $TestName `
                 -Condition $matches `
-                -FailMessage "Expected type $($ExpectedType.Name), got $($Value?.GetType().Name ?? 'null')"
+                -FailMessage "Expected type $($ExpectedType.Name), got $actualTypeName"
 }
 
 function Write-TestSectionHeader {
@@ -114,10 +131,7 @@ function Write-TestSectionHeader {
 }
 
 # =============================================================================
-# Build a minimal mock configuration hashtable that satisfies every
-# parameter the modules reference from $Config. Values are set to the
-# same defaults as windows-monitor.conf.ps1 so module logic runs in a
-# realistic configuration context even though no events will be found.
+# Mock configuration hashtable
 # =============================================================================
 
 $MockConfig = @{
@@ -144,23 +158,18 @@ $MockConfig = @{
                                        "C:\Program Files\", "C:\Program Files (x86)\")
 }
 
-# Mock logger: captures log output without writing to disk, so tests
-# do not require a writable log directory to run.
 $LogCapture = [System.Collections.Generic.List[string]]::new()
 $MockLogger = {
     param($Level, $Source, $Message)
     $LogCapture.Add("[$Level] [$Source] $Message")
 }
 
-# Use a time window guaranteed to return no events on any system —
-# a 1-second window 10 years in the past. This exercises all module
-# code paths without needing event log data to exist.
+# Far-past window guaranteed to return no live events on any system
 $TestEndTime   = [DateTime]"2015-01-01 00:00:01"
 $TestStartTime = [DateTime]"2015-01-01 00:00:00"
 
 # =============================================================================
-# Helper: verify the standard result object structure that all modules
-# must return. Called once per module with its actual return value.
+# Standard result structure validator
 # =============================================================================
 
 function Test-StandardResultStructure {
@@ -174,16 +183,16 @@ function Test-StandardResultStructure {
     Write-Host "  Structural validation for $ModuleName output:" -ForegroundColor White
 
     Assert-NotNull "$ModuleName — result is not null" $Result "Module returned null"
-    Assert-PropertyExists "$ModuleName — has Category property" $Result "Category"
+    Assert-PropertyExists "$ModuleName — has Category property"    $Result "Category"
     Assert-PropertyExists "$ModuleName — has CollectedAt property" $Result "CollectedAt"
     Assert-PropertyExists "$ModuleName — has WindowStart property" $Result "WindowStart"
-    Assert-PropertyExists "$ModuleName — has WindowEnd property" $Result "WindowEnd"
+    Assert-PropertyExists "$ModuleName — has WindowEnd property"   $Result "WindowEnd"
     Assert-PropertyExists "$ModuleName — has TotalEvents property" $Result "TotalEvents"
-    Assert-PropertyExists "$ModuleName — has CritCount property" $Result "CritCount"
-    Assert-PropertyExists "$ModuleName — has WarnCount property" $Result "WarnCount"
-    Assert-PropertyExists "$ModuleName — has InfoCount property" $Result "InfoCount"
+    Assert-PropertyExists "$ModuleName — has CritCount property"   $Result "CritCount"
+    Assert-PropertyExists "$ModuleName — has WarnCount property"   $Result "WarnCount"
+    Assert-PropertyExists "$ModuleName — has InfoCount property"   $Result "InfoCount"
     Assert-PropertyExists "$ModuleName — has ModuleErrors property" $Result "ModuleErrors"
-    Assert-PropertyExists "$ModuleName — has Events property" $Result "Events"
+    Assert-PropertyExists "$ModuleName — has Events property"      $Result "Events"
 
     if ($null -ne $Result) {
         Assert-True "$ModuleName — Category is '$ExpectedCategory'" `
@@ -192,7 +201,7 @@ function Test-StandardResultStructure {
 
         Assert-TypeMatch "$ModuleName — CollectedAt is DateTime" $Result.CollectedAt ([DateTime])
         Assert-TypeMatch "$ModuleName — WindowStart is DateTime" $Result.WindowStart ([DateTime])
-        Assert-TypeMatch "$ModuleName — WindowEnd is DateTime" $Result.WindowEnd ([DateTime])
+        Assert-TypeMatch "$ModuleName — WindowEnd is DateTime"   $Result.WindowEnd   ([DateTime])
 
         Assert-True "$ModuleName — WindowStart matches test input" `
             -Condition ($Result.WindowStart -eq $TestStartTime) `
@@ -218,21 +227,15 @@ function Test-StandardResultStructure {
             -Condition ($Result.InfoCount -is [int] -and $Result.InfoCount -ge 0) `
             -FailMessage "InfoCount is not a non-negative integer"
 
-        # Severity arithmetic consistency check.
-        # This catches bugs in count accumulation logic without requiring
-        # live events — if the module reports TotalEvents=5 but the sum
-        # of severity buckets is 4 or 6, the counting logic is broken.
         $severitySum = $Result.CritCount + $Result.WarnCount + $Result.InfoCount
         Assert-True "$ModuleName — TotalEvents == CritCount + WarnCount + InfoCount" `
             -Condition ($Result.TotalEvents -eq $severitySum) `
-            -FailMessage "TotalEvents($($Result.TotalEvents)) != CritCount($($Result.CritCount)) + WarnCount($($Result.WarnCount)) + InfoCount($($Result.InfoCount)) = $severitySum"
+            -FailMessage "TotalEvents($($Result.TotalEvents)) != CRIT($($Result.CritCount)) + WARN($($Result.WarnCount)) + INFO($($Result.InfoCount)) = $severitySum"
 
-        # Events list type check
         Assert-True "$ModuleName — Events is a List or array type" `
             -Condition ($Result.Events -is [System.Collections.IEnumerable]) `
             -FailMessage "Events property is not enumerable"
 
-        # ModuleErrors list type check
         Assert-True "$ModuleName — ModuleErrors is a List or array type" `
             -Condition ($Result.ModuleErrors -is [System.Collections.IEnumerable]) `
             -FailMessage "ModuleErrors property is not enumerable"
@@ -250,8 +253,7 @@ Write-Host " $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Cyan
 Write-Host "=============================================================" -ForegroundColor Cyan
 
 # -----------------------------------------------------------------------------
-# TEST GROUP 1: Module file existence checks
-# Validate all five module files exist before trying to load any of them.
+# GROUP 1: Module file existence
 # -----------------------------------------------------------------------------
 Write-TestSectionHeader "Group 1: Module File Existence"
 
@@ -271,7 +273,7 @@ foreach ($file in $moduleFiles) {
 }
 
 # -----------------------------------------------------------------------------
-# TEST GROUP 2: Configuration file existence
+# GROUP 2: Configuration file existence
 # -----------------------------------------------------------------------------
 Write-TestSectionHeader "Group 2: Configuration File Existence"
 
@@ -281,10 +283,7 @@ Assert-True "Configuration file exists" `
     -FailMessage "Expected at: $configFile"
 
 # -----------------------------------------------------------------------------
-# TEST GROUP 3: Module syntax validation
-# Uses the PowerShell parser API to validate syntax without executing.
-# This catches bracket mismatches, unclosed strings, and invalid tokens
-# before attempting to dot-source any module.
+# GROUP 3: PowerShell syntax validation
 # -----------------------------------------------------------------------------
 Write-TestSectionHeader "Group 3: PowerShell Syntax Validation"
 
@@ -295,13 +294,22 @@ foreach ($file in $moduleFiles) {
         $null = [System.Management.Automation.Language.Parser]::ParseFile(
             $filePath, [ref]$null, [ref]$parseErrors
         )
+
+        # PowerShell 5.1 compatible join — no -join with pipeline in all versions
+        if ($parseErrors.Count -eq 0) {
+            $errorDetail = ""
+        } else {
+            $errorMessages = @()
+            foreach ($pe in $parseErrors) { $errorMessages += $pe.Message }
+            $errorDetail = $errorMessages -join "; "
+        }
+
         Assert-True "Syntax valid: $file" `
             -Condition ($parseErrors.Count -eq 0) `
-            -FailMessage "Parse errors: $($parseErrors | ForEach-Object { $_.Message } | Join-String -Separator '; ')"
+            -FailMessage "Parse errors: $errorDetail"
     }
 }
 
-# Also validate the config file syntax
 if (Test-Path $configFile) {
     $parseErrors = $null
     $null = [System.Management.Automation.Language.Parser]::ParseFile(
@@ -309,11 +317,11 @@ if (Test-Path $configFile) {
     )
     Assert-True "Syntax valid: windows-monitor.conf.ps1" `
         -Condition ($parseErrors.Count -eq 0) `
-        -FailMessage "Parse errors: $($parseErrors | ForEach-Object { $_.Message } | Join-String -Separator '; ')"
+        -FailMessage "Parse errors found in config file"
 }
 
 # -----------------------------------------------------------------------------
-# TEST GROUP 4: Authentication module structural validation
+# GROUP 4: Authentication module
 # -----------------------------------------------------------------------------
 Write-TestSectionHeader "Group 4: Get-AuthenticationEvents — Structural Validation"
 
@@ -329,12 +337,11 @@ if (Test-Path $authModulePath) {
             -Logger     $MockLogger
 
         Test-StandardResultStructure -ModuleName "Get-AuthenticationEvents" `
-                                     -Result $authResult `
+                                     -Result     $authResult `
                                      -ExpectedCategory "Authentication"
 
-        # Authentication-specific properties
         Assert-PropertyExists "Auth — has FailuresByAccount property" $authResult "FailuresByAccount"
-        Assert-PropertyExists "Auth — has FailuresBySource property" $authResult "FailuresBySource"
+        Assert-PropertyExists "Auth — has FailuresBySource property"  $authResult "FailuresBySource"
 
         Assert-True "Auth — FailuresByAccount is hashtable" `
             -Condition ($authResult.FailuresByAccount -is [hashtable]) `
@@ -343,11 +350,16 @@ if (Test-Path $authModulePath) {
         Assert-True "Auth — FailuresBySource is hashtable" `
             -Condition ($authResult.FailuresBySource -is [hashtable]) `
             -FailMessage "FailuresBySource is not a hashtable"
-
     }
     catch {
         $script:TestsFailed++
-        Write-Host "  FAIL  Get-AuthenticationEvents threw an unhandled exception: $($_.Exception.Message)" -ForegroundColor Red
+        $errMsg = $_.Exception.Message
+        Write-Host "  FAIL  Get-AuthenticationEvents threw an unhandled exception: $errMsg" -ForegroundColor Red
+        $script:TestResults.Add([PSCustomObject]@{
+            Name   = "Get-AuthenticationEvents — unhandled exception"
+            Result = "FAIL"
+            Detail = $errMsg
+        })
     }
 }
 else {
@@ -355,7 +367,7 @@ else {
 }
 
 # -----------------------------------------------------------------------------
-# TEST GROUP 5: Service module structural validation
+# GROUP 5: Service module
 # -----------------------------------------------------------------------------
 Write-TestSectionHeader "Group 5: Get-ServiceEvents — Structural Validation"
 
@@ -371,11 +383,11 @@ if (Test-Path $serviceModulePath) {
             -Logger     $MockLogger
 
         Test-StandardResultStructure -ModuleName "Get-ServiceEvents" `
-                                     -Result $serviceResult `
+                                     -Result     $serviceResult `
                                      -ExpectedCategory "Services"
 
         Assert-PropertyExists "Services — has FailedServices property" $serviceResult "FailedServices"
-        Assert-PropertyExists "Services — has CrashLoops property" $serviceResult "CrashLoops"
+        Assert-PropertyExists "Services — has CrashLoops property"     $serviceResult "CrashLoops"
 
         Assert-True "Services — FailedServices is hashtable" `
             -Condition ($serviceResult.FailedServices -is [hashtable]) `
@@ -384,11 +396,16 @@ if (Test-Path $serviceModulePath) {
         Assert-True "Services — CrashLoops is enumerable" `
             -Condition ($serviceResult.CrashLoops -is [System.Collections.IEnumerable]) `
             -FailMessage "CrashLoops is not enumerable"
-
     }
     catch {
         $script:TestsFailed++
-        Write-Host "  FAIL  Get-ServiceEvents threw an unhandled exception: $($_.Exception.Message)" -ForegroundColor Red
+        $errMsg = $_.Exception.Message
+        Write-Host "  FAIL  Get-ServiceEvents threw an unhandled exception: $errMsg" -ForegroundColor Red
+        $script:TestResults.Add([PSCustomObject]@{
+            Name   = "Get-ServiceEvents — unhandled exception"
+            Result = "FAIL"
+            Detail = $errMsg
+        })
     }
 }
 else {
@@ -396,7 +413,7 @@ else {
 }
 
 # -----------------------------------------------------------------------------
-# TEST GROUP 6: Privilege module structural validation
+# GROUP 6: Privilege module
 # -----------------------------------------------------------------------------
 Write-TestSectionHeader "Group 6: Get-PrivilegeEvents — Structural Validation"
 
@@ -412,11 +429,11 @@ if (Test-Path $privModulePath) {
             -Logger     $MockLogger
 
         Test-StandardResultStructure -ModuleName "Get-PrivilegeEvents" `
-                                     -Result $privResult `
+                                     -Result     $privResult `
                                      -ExpectedCategory "Privilege"
 
         Assert-PropertyExists "Privilege — has UnexpectedAdminLogons property" $privResult "UnexpectedAdminLogons"
-        Assert-PropertyExists "Privilege — has GroupChangeSummary property" $privResult "GroupChangeSummary"
+        Assert-PropertyExists "Privilege — has GroupChangeSummary property"    $privResult "GroupChangeSummary"
 
         Assert-True "Privilege — UnexpectedAdminLogons is enumerable" `
             -Condition ($privResult.UnexpectedAdminLogons -is [System.Collections.IEnumerable]) `
@@ -425,11 +442,16 @@ if (Test-Path $privModulePath) {
         Assert-True "Privilege — GroupChangeSummary is hashtable" `
             -Condition ($privResult.GroupChangeSummary -is [hashtable]) `
             -FailMessage "GroupChangeSummary is not a hashtable"
-
     }
     catch {
         $script:TestsFailed++
-        Write-Host "  FAIL  Get-PrivilegeEvents threw an unhandled exception: $($_.Exception.Message)" -ForegroundColor Red
+        $errMsg = $_.Exception.Message
+        Write-Host "  FAIL  Get-PrivilegeEvents threw an unhandled exception: $errMsg" -ForegroundColor Red
+        $script:TestResults.Add([PSCustomObject]@{
+            Name   = "Get-PrivilegeEvents — unhandled exception"
+            Result = "FAIL"
+            Detail = $errMsg
+        })
     }
 }
 else {
@@ -437,7 +459,7 @@ else {
 }
 
 # -----------------------------------------------------------------------------
-# TEST GROUP 7: System health module structural validation
+# GROUP 7: System health module
 # -----------------------------------------------------------------------------
 Write-TestSectionHeader "Group 7: Get-SystemHealthEvents — Structural Validation"
 
@@ -453,11 +475,11 @@ if (Test-Path $healthModulePath) {
             -Logger     $MockLogger
 
         Test-StandardResultStructure -ModuleName "Get-SystemHealthEvents" `
-                                     -Result $healthResult `
+                                     -Result     $healthResult `
                                      -ExpectedCategory "SystemHealth"
 
         Assert-PropertyExists "SystemHealth — has UnexpectedShutdowns property" $healthResult "UnexpectedShutdowns"
-        Assert-PropertyExists "SystemHealth — has DiskErrorCount property" $healthResult "DiskErrorCount"
+        Assert-PropertyExists "SystemHealth — has DiskErrorCount property"      $healthResult "DiskErrorCount"
 
         Assert-True "SystemHealth — UnexpectedShutdowns is int" `
             -Condition ($healthResult.UnexpectedShutdowns -is [int]) `
@@ -466,11 +488,16 @@ if (Test-Path $healthModulePath) {
         Assert-True "SystemHealth — DiskErrorCount is int" `
             -Condition ($healthResult.DiskErrorCount -is [int]) `
             -FailMessage "DiskErrorCount is not an integer"
-
     }
     catch {
         $script:TestsFailed++
-        Write-Host "  FAIL  Get-SystemHealthEvents threw an unhandled exception: $($_.Exception.Message)" -ForegroundColor Red
+        $errMsg = $_.Exception.Message
+        Write-Host "  FAIL  Get-SystemHealthEvents threw an unhandled exception: $errMsg" -ForegroundColor Red
+        $script:TestResults.Add([PSCustomObject]@{
+            Name   = "Get-SystemHealthEvents — unhandled exception"
+            Result = "FAIL"
+            Detail = $errMsg
+        })
     }
 }
 else {
@@ -478,7 +505,7 @@ else {
 }
 
 # -----------------------------------------------------------------------------
-# TEST GROUP 8: Scheduled task module structural validation
+# GROUP 8: Scheduled task module
 # -----------------------------------------------------------------------------
 Write-TestSectionHeader "Group 8: Get-ScheduledTaskEvents — Structural Validation"
 
@@ -494,7 +521,7 @@ if (Test-Path $taskModulePath) {
             -Logger     $MockLogger
 
         Test-StandardResultStructure -ModuleName "Get-ScheduledTaskEvents" `
-                                     -Result $taskResult `
+                                     -Result     $taskResult `
                                      -ExpectedCategory "ScheduledTasks"
 
         Assert-PropertyExists "ScheduledTasks — has RapidCreateDelete property" $taskResult "RapidCreateDelete"
@@ -502,11 +529,16 @@ if (Test-Path $taskModulePath) {
         Assert-True "ScheduledTasks — RapidCreateDelete is enumerable" `
             -Condition ($taskResult.RapidCreateDelete -is [System.Collections.IEnumerable]) `
             -FailMessage "RapidCreateDelete is not enumerable"
-
     }
     catch {
         $script:TestsFailed++
-        Write-Host "  FAIL  Get-ScheduledTaskEvents threw an unhandled exception: $($_.Exception.Message)" -ForegroundColor Red
+        $errMsg = $_.Exception.Message
+        Write-Host "  FAIL  Get-ScheduledTaskEvents threw an unhandled exception: $errMsg" -ForegroundColor Red
+        $script:TestResults.Add([PSCustomObject]@{
+            Name   = "Get-ScheduledTaskEvents — unhandled exception"
+            Result = "FAIL"
+            Detail = $errMsg
+        })
     }
 }
 else {
@@ -514,10 +546,7 @@ else {
 }
 
 # -----------------------------------------------------------------------------
-# TEST GROUP 9: Logger integration validation
-# Verify that modules actually call the logger — a module that silently
-# ignores the logger parameter would not surface execution detail in the
-# orchestrator's log file, making troubleshooting significantly harder.
+# GROUP 9: Logger integration
 # -----------------------------------------------------------------------------
 Write-TestSectionHeader "Group 9: Logger Integration"
 
@@ -528,9 +557,9 @@ Assert-True "Logger was called during module executions" `
 $infoMessages = $LogCapture | Where-Object { $_ -like "*[INFO]*" }
 Assert-True "Logger received INFO-level messages" `
     -Condition ($infoMessages.Count -gt 0) `
-    -FailMessage "No INFO-level log messages found — module start/complete messages may be missing"
+    -FailMessage "No INFO-level log messages found"
 
-Write-Host "  INFO  Total log messages captured during test run: $($LogCapture.Count)" -ForegroundColor Gray
+Write-Host "  INFO  Total log messages captured: $($LogCapture.Count)" -ForegroundColor Gray
 
 # =============================================================================
 # RESULTS SUMMARY
@@ -544,7 +573,11 @@ Write-Host " Test Results Summary" -ForegroundColor Cyan
 Write-Host "=============================================================" -ForegroundColor Cyan
 Write-Host " Total tests:  $totalTests"
 Write-Host " Passed:       $($script:TestsPassed)" -ForegroundColor Green
-Write-Host " Failed:       $($script:TestsFailed)" -ForegroundColor $(if ($script:TestsFailed -gt 0) { "Red" } else { "Green" })
+if ($script:TestsFailed -gt 0) {
+    Write-Host " Failed:       $($script:TestsFailed)" -ForegroundColor Red
+} else {
+    Write-Host " Failed:       $($script:TestsFailed)" -ForegroundColor Green
+}
 Write-Host "=============================================================" -ForegroundColor Cyan
 
 if ($script:TestsFailed -gt 0) {
@@ -559,5 +592,4 @@ if ($script:TestsFailed -gt 0) {
 }
 
 Write-Host ""
-
 exit $(if ($script:TestsFailed -gt 0) { 1 } else { 0 })
